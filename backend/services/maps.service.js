@@ -37,6 +37,37 @@ const getLatLngFromPlace = async (placeName) => {
   const url = "https://places.googleapis.com/v1/places:searchText";
 
   try {
+    console.log(placeName);
+    const response = await axios.post(
+      url,
+      { text_query: placeName },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "X-Goog-Api-Key": apiKey,
+          "X-Goog-FieldMask": "places.location",
+        },
+      }
+    );
+
+    const place = response.data.places?.[0];
+    if (!place || !place.location) throw new Error("No location found!");
+
+    return place.location; // { latitude: 40.7128, longitude: -74.0060 }
+  } catch (err) {
+    console.error(
+      "❌ Error fetching place coordinates: (Map Service)",
+      err.response?.data || err.message
+    );
+    throw err;
+  }
+};
+
+module.exports.getAddressCoordinate = async (placeName) => {
+  const apiKey = process.env.GOOGLE_MAPS_API_2;
+  const url = "https://places.googleapis.com/v1/places:searchText";
+
+  try {
     const response = await axios.post(
       url,
       { textQuery: placeName },
@@ -59,29 +90,6 @@ const getLatLngFromPlace = async (placeName) => {
       err.response?.data || err.message
     );
     throw err;
-  }
-};
-
-module.exports.getAddressCoordinate = async (address) => {
-  const apiKey = process.env.GOOGLE_MAPS_API;
-  const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
-    address
-  )}&key=${apiKey}`;
-
-  try {
-    const response = await axios.get(url);
-    if (response.data.status === "OK") {
-      const location = response.data.results[0].geometry.location;
-      return {
-        ltd: location.lat,
-        lng: location.lng,
-      };
-    } else {
-      throw new Error("Unable to fetch coordinates");
-    }
-  } catch (error) {
-    console.error(error);
-    throw error;
   }
 };
 
@@ -131,8 +139,6 @@ module.exports.getDistanceTime = async (origin, destination) => {
       }
     );
 
-    console.log("✅ API Response:", JSON.stringify(response.data, null, 2));
-
     const route = response.data.routes?.[0];
     console.log(route.distanceMeters);
     console.log(route.duration);
@@ -141,6 +147,8 @@ module.exports.getDistanceTime = async (origin, destination) => {
     return {
       distanceMeters: route.distanceMeters,
       duration: route.duration,
+      pickup: pickupLatLng,
+      destination: destinationLatLng,
     };
   } catch (err) {
     console.error(
@@ -192,16 +200,16 @@ module.exports.getAutoCompleteSuggestions = async (input) => {
   }
 };
 
-module.exports.getCaptainsInTheRadius = async (ltd, lng, radius) => {
-  // radius in km
+module.exports.getCaptainsInTheRadius = async (lng, ltd, radius) => {
+  // const captains = await captainModel.find({
+  //   location: {
+  //     $geoWithin: {
+  //       $centerSphere: [[lng, ltd], radius / 6371],
+  //     },
+  //   },
+  // });
 
-  const captains = await captainModel.find({
-    location: {
-      $geoWithin: {
-        $centerSphere: [[ltd, lng], radius / 6371],
-      },
-    },
-  });
+  const newCaptains = await captainModel.find({});
 
-  return captains;
+  return newCaptains;
 };

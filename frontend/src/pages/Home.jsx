@@ -202,6 +202,7 @@ const Home = () => {
   }
 
   async function createRide() {
+    console.log("In create ride");
     const response = await axios.post(
       `${import.meta.env.VITE_BASE_URL}/rides/create`,
       {
@@ -294,7 +295,7 @@ const Home = () => {
       </div>
       <div
         ref={vehiclePanelRef}
-        className="fixed w-full z-10 bottom-0 translate-y-full bg-white px-3 py-10 pt-12"
+        className="fixed w-full z-8 bottom-0 translate-y-full bg-white px-3 py-10 pt-12"
       >
         <VehiclePanel
           selectVehicle={setVehicleType}
@@ -319,7 +320,7 @@ const Home = () => {
       </div>
       <div
         ref={vehicleFoundRef}
-        className="fixed w-full z-10 bottom-0 translate-y-full bg-white px-3 py-6 pt-12"
+        className="fixed w-full z-10 bottom-0 translate-y-full bg-white px-3 py-5 pt-12"
       >
         <LookingForDriver
           createRide={createRide}

@@ -54,7 +54,19 @@ async function getFare(pickup, destination) {
   return fare;
 }
 
+async function getCoordinates2(pickup, destination) {
+  if (!pickup || !destination) {
+    throw new Error("Pickup and destination are required");
+  }
+
+  const distanceTime = await mapService.getDistanceTime(pickup, destination);
+  console.log(distanceTime);
+
+  return distanceTime;
+}
+
 module.exports.getFare = getFare;
+module.exports.getCoordinates2 = getCoordinates2;
 
 function getOtp(num) {
   function generateOtp(num) {
@@ -75,6 +87,9 @@ module.exports.createRide = async ({
   if (!user || !pickup || !destination || !vehicleType) {
     throw new Error("All fields are required");
   }
+
+  console.log("pickup", pickup);
+  console.log("destination", destination);
 
   const fare = await getFare(pickup, destination);
 
