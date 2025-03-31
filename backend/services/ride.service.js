@@ -2,6 +2,7 @@ const rideModel = require("../models/ride.model");
 const mapService = require("./maps.service");
 const bcrypt = require("bcrypt");
 const crypto = require("crypto");
+const captainModel = require("../models/captain.model");
 
 async function getFare(pickup, destination) {
   if (!pickup || !destination) {
@@ -29,7 +30,8 @@ async function getFare(pickup, destination) {
     moto: 1.5,
   };
 
-  const durationInMinutes = parseInt(distanceTime.duration.replace("s", "")) / 60;
+  const durationInMinutes =
+    parseInt(distanceTime.duration.replace("s", "")) / 60;
 
   const fare = {
     auto: Math.round(
@@ -201,6 +203,15 @@ module.exports.endRide = async ({ rideId, captain }) => {
       status: "completed",
     }
   );
+
+  console.log("ride updation done")
+
+  await captainModel.findOneAndUpdate(
+    { _id: captain._id },
+    { $inc: { earnings: ride.fare } }
+  );
+
+  console.log('Captain earnings updated')
 
   return ride;
 };
