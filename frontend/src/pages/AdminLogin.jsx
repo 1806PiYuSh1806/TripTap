@@ -4,7 +4,7 @@ import { UserDataContext } from '../context/UserContext'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 
-const UserLogin = () => {
+const AdminLogin = () => {
   const [ email, setEmail ] = useState('')
   const [ password, setPassword ] = useState('')
   const [ userData, setUserData ] = useState({})
@@ -22,15 +22,11 @@ const UserLogin = () => {
       password: password
     }
 
-    const response = await axios.post(`${import.meta.env.VITE_BASE_URL}/users/login`, userData)
+    const response = await axios.post(`${import.meta.env.VITE_BASE_URL}/admin/login`, userData)
 
     if (response.status === 200) {
-      const data = response.data
-      setUser(data.user)
-      localStorage.setItem('token', data.token)
-      navigate('/home')
+      navigate('/admin')
     }
-
 
     setEmail('')
     setPassword('')
@@ -73,17 +69,9 @@ const UserLogin = () => {
           >Login</button>
 
         </form>
-        <p className='text-center'>New here? <Link to='/signup' className='text-blue-600'>Create new Account</Link></p>
-        <p className='text-center'>Admin? <Link to='/AdminLogin' className='text-blue-600'>Go to Admin Page</Link></p>
-      </div>
-      <div>
-        <Link
-          to='/captain-login'
-          className='bg-[#10b461] flex items-center justify-center text-white font-semibold mb-5 rounded-lg px-4 py-2 w-full text-lg placeholder:text-base'
-        >Sign in as Captain</Link>
       </div>
     </div>
   )
 }
 
-export default UserLogin
+export default AdminLogin

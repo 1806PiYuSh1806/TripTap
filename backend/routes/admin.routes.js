@@ -1,8 +1,10 @@
 const express = require('express');
+const multer = require('multer');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const Admin = require('../models/admin.model');
 const Ad = require('../models/ad.model');
+const upload = multer({ dest: 'uploads/' });
 
 // Secret key for JWT (store this securely in production, e.g., in environment variables)
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -21,7 +23,7 @@ router.post('/login', async (req, res) => {
     }
     // Sign and return JWT
     const token = jwt.sign({ id: admin._id }, JWT_SECRET, { expiresIn: '1h' });
-    res.json({ token });
+    res.status(200).json({ token });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -41,16 +43,16 @@ const auth = (req, res, next) => {
 };
 
 // Create a new ad (protected route)
-router.post('/ads', auth, async (req, res) => {
+router.post('/ads', auth, upload.single('image'), async (req, res) => {
   try {
-    const { title, description, imageUrl, businessName } = req.body;
-    const newAd = new Ad({
-      title,
-      description,
-      imageUrl,
-      businessName,
-      createdBy: req.admin.id
-    });
+    const { title, description, businessName } = req.body;
+    if (!title || !businessName) {
+      return res.status(400).json({ error: "Title and Business Name are required." });
+    }
+    
+    const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
+    
+    const newAd = new Ad({ title, description, imageUrl, businessName, createdBy: req.admin.id });
     const savedAd = await newAd.save();
     res.json(savedAd);
   } catch (err) {
@@ -59,9 +61,9 @@ router.post('/ads', auth, async (req, res) => {
 });
 
 // Get all ads created by the logged-in admin (protected route)
-router.get('/ads', auth, async (req, res) => {
+router.get('/ads', async (req, res) => {
   try {
-    const ads = await Ad.find({ createdBy: req.admin.id });
+    const ads = await Ad.find({});
     res.json(ads);
   } catch (err) {
     res.status(500).json({ error: err.message });
