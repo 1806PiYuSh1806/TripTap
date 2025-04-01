@@ -200,7 +200,12 @@ module.exports.getAutoCompleteSuggestions = async (input) => {
   }
 };
 
-module.exports.getCaptainsInTheRadius = async (lng, ltd, radius) => {
+module.exports.getCaptainsInTheRadius = async (
+  lng,
+  ltd,
+  radius,
+  vehicleType
+) => {
   // const captains = await captainModel.find({
   //   location: {
   //     $geoWithin: {
@@ -209,7 +214,12 @@ module.exports.getCaptainsInTheRadius = async (lng, ltd, radius) => {
   //   },
   // });
 
-  const newCaptains = await captainModel.find({});
+  console.log("Vehicle Type:", vehicleType);
+  vehicleType = vehicleType === "moto" ? "motorcycle" : vehicleType;
+
+  const newCaptains = await captainModel.find({ "vehicle.vehicleType": vehicleType });
+
+  console.log(newCaptains);
 
   return newCaptains;
 };
