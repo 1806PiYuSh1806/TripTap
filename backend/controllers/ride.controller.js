@@ -62,7 +62,6 @@ module.exports.createRide = async (req, res) => {
       destination: destination,
       vehicleType,
     });
-
     
     console.log("Hello");
 

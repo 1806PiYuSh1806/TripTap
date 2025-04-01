@@ -112,6 +112,7 @@ async function getFare(pickup, destination) {
     moto: Math.round(calculateVehicleFare("bike")),
     auto: Math.round(calculateVehicleFare("auto")),
     car: Math.round(calculateVehicleFare("car")),
+    distance: distanceKm
   };
 
   console.log("Fare details:", fare);
@@ -187,30 +188,36 @@ module.exports.confirmRide = async ({ rideId, captain }) => {
     throw new Error("Ride id is required");
   }
 
+  // Check if the ride is already accepted
+  const existingRide = await rideModel.findOne({ _id: rideId });
+
+  if (!existingRide) {
+    throw new Error("Ride not found");
+  }
+
+  if (existingRide.status === "accepted") {
+    throw new Error("Ride is already accepted by another captain");
+  }
+
+  // Update ride status and assign captain
   await rideModel.findOneAndUpdate(
-    {
-      _id: rideId,
-    },
+    { _id: rideId },
     {
       status: "accepted",
       captain: captain._id,
     }
   );
 
+  // Fetch updated ride details
   const ride = await rideModel
-    .findOne({
-      _id: rideId,
-    })
+    .findOne({ _id: rideId })
     .populate("user")
     .populate("captain")
     .select("+otp");
 
-  if (!ride) {
-    throw new Error("Ride not found");
-  }
-
   return ride;
 };
+
 
 module.exports.startRide = async ({ rideId, otp, captain }) => {
   if (!rideId || !otp) {
