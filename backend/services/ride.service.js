@@ -121,7 +121,7 @@ async function getFare(pickup, destination) {
 
 // Helper function to fetch weather data from OpenWeather API
 async function fetchWeatherData(lat, lon) {
-  const apiKey = "67d1e186f0f2cacb1425582023092bf3"; // Replace with your valid API key
+  const apiKey = process.env.OPENWEATHER_API_KEY; // Replace with your valid API key
   const response = await fetch(
     `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${apiKey}`
   );
