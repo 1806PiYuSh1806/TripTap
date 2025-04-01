@@ -34,6 +34,9 @@ const Home = () => {
   const [fare, setFare] = useState({});
   const [vehicleType, setVehicleType] = useState(null);
   const [ride, setRide] = useState(null);
+  const [ads, setAds] = useState([]);
+  const [currentAdIndex, setCurrentAdIndex] = useState(0);
+  const [showAd, setShowAd] = useState(false);
 
   const navigate = useNavigate();
 
@@ -97,6 +100,33 @@ const Home = () => {
 
   const submitHandler = (e) => {
     e.preventDefault();
+  };
+
+  useEffect(() => {
+    const fetchAds = async () => {
+      try {
+        const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/admin/ads`);
+        setAds(response.data);
+        if (response.data.length > 0) {
+          setShowAd(true); // Show first ad immediately
+        }
+      } catch (error) {
+        console.error("Error fetching ads:", error);
+      }
+    };
+
+    fetchAds();
+  }, []);
+
+  // Handle closing the ad
+  const closeAd = () => {
+    setShowAd(false);
+    setTimeout(() => {
+      setCurrentAdIndex((prevIndex) => (prevIndex + 1) % ads.length);
+      setTimeout(() => {
+        setShowAd(true);
+      }, 60000); // Show the next ad after 1 minute
+    }, 500);
   };
 
   useGSAP(
@@ -342,6 +372,19 @@ const Home = () => {
           waitingForDriver={waitingForDriver}
         />
       </div>
+
+      {showAd && ads.length > 0 && (
+        <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-gray-100 bg-opacity-50 backdrop-blur-md z-50" onClick={closeAd}>
+          <div className="bg-white p-5 rounded-lg shadow-lg max-w-sm relative">
+            {ads[currentAdIndex]?.imageUrl && (
+              <img src={`${import.meta.env.VITE_BASE_URL}${ads[currentAdIndex]?.imageUrl}`} alt={ads[currentAdIndex]?.title} className="w-full h-40 object-cover rounded-lg mb-3" />
+            )}
+            <h2 className="text-lg font-bold">{ads[currentAdIndex]?.title}</h2>
+            <p className="mt-2 text-gray-700">{ads[currentAdIndex]?.description}</p>
+            <button className="absolute top-2 right-2 text-xl font-bold text-gray-600 hover:text-black" onClick={closeAd}>×</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
