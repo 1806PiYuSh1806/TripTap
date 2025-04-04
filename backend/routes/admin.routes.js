@@ -45,14 +45,14 @@ const auth = (req, res, next) => {
 // Create a new ad (protected route)
 router.post('/ads', auth, upload.single('image'), async (req, res) => {
   try {
-    const { title, description, businessName } = req.body;
+    const { title, description, businessName, city } = req.body;
     if (!title || !businessName) {
       return res.status(400).json({ error: "Title and Business Name are required." });
     }
     
     const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
     
-    const newAd = new Ad({ title, description, imageUrl, businessName, createdBy: req.admin.id });
+    const newAd = new Ad({ title, description, imageUrl, businessName, createdBy: req.admin.id, city: city.toUpperCase() });
     const savedAd = await newAd.save();
     res.json(savedAd);
   } catch (err) {
@@ -63,12 +63,17 @@ router.post('/ads', auth, upload.single('image'), async (req, res) => {
 // Get all ads created by the logged-in admin (protected route)
 router.get('/ads', async (req, res) => {
   try {
-    const ads = await Ad.find({});
+    let { city } = req.query; // Extract city from request query
+
+    const filter = city ? { city: city.toUpperCase() } : {}; // Convert to uppercase and apply filter
+
+    const ads = await Ad.find(filter); // Fetch ads based on city
     res.json(ads);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
+
 
 // Update an ad by its ID (protected route)
 router.put('/ads/:id', auth, async (req, res) => {
