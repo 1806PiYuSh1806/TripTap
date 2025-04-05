@@ -162,6 +162,7 @@ module.exports.createRide = async ({
   pickup,
   destination,
   vehicleType,
+  fare,
 }) => {
   if (!user || !pickup || !destination || !vehicleType) {
     throw new Error("All fields are required");
@@ -169,24 +170,29 @@ module.exports.createRide = async ({
 
   console.log("pickup", pickup);
   console.log("destination", destination);
+
   const distanceTime = await mapService.getDistanceTime(pickup, destination);
   const metersToKm = (meters) => meters / 1000;
-
   const distanceKm = metersToKm(distanceTime.distanceMeters);
-  const fare = await getFare(pickup, destination);
 
-  const ride = rideModel.create({
+  const fare_initial = await getFare(pickup, destination);
+
+  const finalFare =
+    fare && fare[vehicleType] ? fare[vehicleType] : fare_initial[vehicleType];
+
+  const ride = await rideModel.create({
     user,
     pickup,
     destination,
     otp: getOtp(6),
-    fare: fare[vehicleType],
+    fare: finalFare,
     distance: distanceKm,
-    vehicleType: vehicleType,
+    vehicleType,
   });
 
   return ride;
 };
+
 
 module.exports.confirmRide = async ({ rideId, captain }) => {
   if (!rideId) {

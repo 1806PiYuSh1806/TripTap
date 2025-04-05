@@ -42,7 +42,7 @@ module.exports.createRide = async (req, res) => {
     return res.status(400).json({ errors: errors.array() });
   }
 
-  const { userId, pickup, destination, vehicleType } = req.body;
+  const { userId, pickup, destination, vehicleType, fare } = req.body;
 
   try {
     // Convert pickup and destination to coordinates
@@ -61,6 +61,7 @@ module.exports.createRide = async (req, res) => {
       pickup: pickup,
       destination: destination,
       vehicleType,
+      fare,
     });
     
     console.log("Hello");

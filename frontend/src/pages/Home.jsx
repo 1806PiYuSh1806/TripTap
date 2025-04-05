@@ -13,6 +13,8 @@ import { useContext } from "react";
 import { UserDataContext } from "../context/UserContext";
 import { useNavigate } from "react-router-dom";
 import LiveTracking from "../components/LiveTracking";
+import CustomFarePanel from "../components/CustomFarePanel";
+import "./Home.css";
 
 const Home = () => {
   const [pickup, setPickup] = useState("");
@@ -37,6 +39,9 @@ const Home = () => {
   const [ads, setAds] = useState([]);
   const [currentAdIndex, setCurrentAdIndex] = useState(0);
   const [showAd, setShowAd] = useState(false);
+  const [customFarePanel, setCustomFarePanel] = useState(false);
+  const customFarePanelRef = useRef(null);
+  const [customFare, setCustomFare] = useState(null);
 
   const navigate = useNavigate();
 
@@ -103,19 +108,40 @@ const Home = () => {
   };
 
   useEffect(() => {
-    const fetchAds = async () => {
+    const fetchCityAndAds = async () => {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/admin/ads`);
-        setAds(response.data);
-        if (response.data.length > 0) {
-          setShowAd(true); // Show first ad immediately
-        }
+        // Get user's location
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            const { latitude, longitude } = position.coords;
+
+            // Use reverse geocoding API to get the city name
+            const locationResponse = await axios.get(
+              `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
+            );
+            const userCity = locationResponse.data.city || "Unknown";
+            console.log(userCity);
+
+            // Fetch ads for the city
+            const response = await axios.get(
+              `${import.meta.env.VITE_BASE_URL}/admin/ads?city=${userCity}`
+            );
+
+            setAds(response.data);
+            if (response.data.length > 0) {
+              setShowAd(true); // Show first ad immediately
+            }
+          },
+          (error) => {
+            console.error("Error fetching location:", error);
+          }
+        );
       } catch (error) {
         console.error("Error fetching ads:", error);
       }
     };
 
-    fetchAds();
+    fetchCityAndAds();
   }, []);
 
   // Handle closing the ad
@@ -168,6 +194,18 @@ const Home = () => {
     },
     [vehiclePanel]
   );
+
+  useGSAP(() => {
+    if (customFarePanel) {
+      gsap.to(customFarePanelRef.current, {
+        transform: "translateY(0)",
+      });
+    } else {
+      gsap.to(customFarePanelRef.current, {
+        transform: "translateY(100%)",
+      });
+    }
+  }, [customFarePanel]);
 
   useGSAP(
     function () {
@@ -239,6 +277,7 @@ const Home = () => {
         pickup,
         destination,
         vehicleType,
+        fare,
       },
       {
         headers: {
@@ -330,8 +369,20 @@ const Home = () => {
         <VehiclePanel
           selectVehicle={setVehicleType}
           fare={fare}
-          setConfirmRidePanel={setConfirmRidePanel}
           setVehiclePanel={setVehiclePanel}
+          setCustomFarePanel={setCustomFarePanel}
+        />
+      </div>
+      <div
+        ref={customFarePanelRef}
+        className="fixed w-full z-10 bottom-0 translate-y-full bg-white px-3 py-6 pt-12"
+      >
+        <CustomFarePanel
+          fare={fare}
+          vehicleType={vehicleType}
+          setFare={setFare}
+          setCustomFarePanel={setCustomFarePanel}
+          setConfirmRidePanel={setConfirmRidePanel}
         />
       </div>
       <div
@@ -342,7 +393,7 @@ const Home = () => {
           createRide={createRide}
           pickup={pickup}
           destination={destination}
-          fare={fare}
+          fare={{ ...fare, amount: customFare || fare.amount }}
           vehicleType={vehicleType}
           setConfirmRidePanel={setConfirmRidePanel}
           setVehicleFound={setVehicleFound}
@@ -374,14 +425,19 @@ const Home = () => {
       </div>
 
       {showAd && ads.length > 0 && (
-        <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-gray-100 bg-opacity-50 backdrop-blur-md z-50" onClick={closeAd}>
-          <div className="bg-white p-5 rounded-lg shadow-lg max-w-sm relative">
+        <div className="ad-overlay" onClick={closeAd}>
+          <div className="ad-container">
             {ads[currentAdIndex]?.imageUrl && (
-              <img src={`${import.meta.env.VITE_BASE_URL}${ads[currentAdIndex]?.imageUrl}`} alt={ads[currentAdIndex]?.title} className="w-full h-40 object-cover rounded-lg mb-3" />
+              <img
+                src={`${import.meta.env.VITE_BASE_URL}${
+                  ads[currentAdIndex]?.imageUrl
+                }`}
+                alt={ads[currentAdIndex]?.title}
+                className="ad-image"
+              />
             )}
-            <h2 className="text-lg font-bold">{ads[currentAdIndex]?.title}</h2>
-            <p className="mt-2 text-gray-700">{ads[currentAdIndex]?.description}</p>
-            <button className="absolute top-2 right-2 text-xl font-bold text-gray-600 hover:text-black" onClick={closeAd}>×</button>
+            <h2 className="ad-title">{ads[currentAdIndex]?.title}</h2>
+            <p className="ad-description">{ads[currentAdIndex]?.description}</p>
           </div>
         </div>
       )}

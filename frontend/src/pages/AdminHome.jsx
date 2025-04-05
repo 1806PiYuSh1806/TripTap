@@ -8,6 +8,7 @@ const AdminHome = () => {
     description: '',
     image: null,
     businessName: '',
+    city: '',
   });
   const [ads, setAds] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -45,6 +46,7 @@ const AdminHome = () => {
       formData.append('title', adData.title);
       formData.append('description', adData.description);
       formData.append('businessName', adData.businessName);
+      formData.append('city', adData.city.toUpperCase());
       if (adData.image) {
         formData.append('image', adData.image);
       } else {
@@ -83,6 +85,10 @@ const AdminHome = () => {
           <div>
             <label htmlFor="businessName" className="block font-medium text-gray-700">Business Name</label>
             <input id="businessName" name="businessName" value={adData.businessName} onChange={handleChange} required className="w-full p-2 border rounded-lg focus:ring focus:ring-blue-300" />
+          </div>
+          <div>
+            <label htmlFor="city" className="block font-medium text-gray-700">City</label>
+            <input id="city" name="city" value={adData.city} onChange={handleChange} required className="w-full p-2 border rounded-lg focus:ring focus:ring-blue-300" />
           </div>
           <div className="border-dashed border-2 border-gray-300 rounded-lg p-4 text-center">
             <input id="image" type="file" name="image" className="hidden" onChange={handleImageUpload} />
